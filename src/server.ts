@@ -1,14 +1,15 @@
 import express, { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import axios from 'axios';
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 dotenv.config();
 
 const app = express();
 app.use(express.json());
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+// Inicializa o SDK do Gemini
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 const memoryStore = new Map<string, any[]>();
 
 const SYSTEM_PROMPT = `Você é o Rafinha, agente virtual da Garimpo Network 🇧🇷.
@@ -23,7 +24,7 @@ Sua missão:
 Regras de formatação para WhatsApp:
 - Use apenas um asterisco para *negrito*.
 - Para separar mensagens enviadas em sequência, use duas barras invertidas: \\
-`;
+\\`;
 
 async function sendWhatsAppMessage(instance: string, remoteJid: string, text: string) {
   try {
@@ -67,16 +68,18 @@ app.post('/webhook', async (req: Request, res: Response) => {
   history.push({ role: 'user', parts: [{ text: `Cliente: ${clientName}\nMensagem: ${userText}` }] });
 
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: history,
-      config: {
-        systemInstruction: SYSTEM_PROMPT,
-        temperature: 0.7,
-      }
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-1.5-flash',
+      systemInstruction: SYSTEM_PROMPT
     });
 
-    const aiResponseText = response.text || '';
+    const chat = model.startChat({
+      history: history.slice(0, -1) // envia o histórico prévio
+    });
+
+    const result = await chat.sendMessage(`Cliente: ${clientName}\nMensagem: ${userText}`);
+    const aiResponseText = result.response.text();
+
     history.push({ role: 'model', parts: [{ text: aiResponseText }] });
 
     if (history.length > 20) {

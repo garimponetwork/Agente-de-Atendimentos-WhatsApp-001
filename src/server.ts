@@ -18,6 +18,24 @@ const model = genAI.getGenerativeModel({
   systemInstruction: RAFINHA_PROMPT,
 });
 
+// Palavras-chave para filtrar spams de empréstimos, promotoras e telemarketing
+const SPAM_KEYWORDS = [
+  'empréstimo',
+  'emprestimo',
+  'consignado',
+  'promotora',
+  's3 promotora',
+  'margem consignável',
+  'margem consignavel',
+  'refinanciamento',
+  'portabilidade',
+  'fgts',
+  'saque aniversário',
+  'saque aniversario',
+  'proposta de crédito',
+  'proposta de credito'
+];
+
 // Rota do Webhook da Evolution API
 app.post('/webhook', async (req: Request, res: Response) => {
   try {
@@ -28,6 +46,12 @@ app.post('/webhook', async (req: Request, res: Response) => {
       const remoteJid = data.data.key.remoteJid;
       const instance = data.instance;
 
+      // 1. Ignora conversas vindas de grupos do WhatsApp (@g.us)
+      if (remoteJid && remoteJid.endsWith('@g.us')) {
+        console.log(`[Mensagem de Grupo Ignorada]: ${remoteJid}`);
+        return res.status(200).json({ status: 'IGNORED_GROUP' });
+      }
+
       // Extrai o texto da mensagem
       const userMessage =
         data.data.message?.conversation ||
@@ -36,6 +60,15 @@ app.post('/webhook', async (req: Request, res: Response) => {
 
       if (userMessage) {
         console.log(`[Mensagem Recebida de ${remoteJid}]: ${userMessage}`);
+
+        // 2. FILTRO ANTI-SPAM: Verifica se a mensagem contém ofertas de empréstimo ou robôs terceiros
+        const lowerText = userMessage.toLowerCase();
+        const isSpam = SPAM_KEYWORDS.some((keyword) => lowerText.includes(keyword));
+
+        if (isSpam) {
+          console.log(`[Spam/Empréstimo Ignorado]: "${userMessage}" vindo de ${remoteJid}`);
+          return res.status(200).json({ status: 'IGNORED_SPAM' });
+        }
 
         // Envia o texto da mensagem para o Gemini gerar a resposta
         const result = await model.generateContent(userMessage);

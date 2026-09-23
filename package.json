@@ -1,7 +1,7 @@
 {
   "name": "agente-atendimentos-whatsapp-001",
   "version": "1.0.0",
-  "description": "Agente de IA autônomo (Rafinha) para atendimento e triagem - Garimpo Network",
+  "description": "Agente de IA autonomo Rafinha Garimpo Network",
   "main": "dist/server.js",
   "scripts": {
     "build": "tsc",

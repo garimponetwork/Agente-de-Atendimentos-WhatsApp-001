@@ -1,104 +1,78 @@
 import express, { Request, Response } from 'express';
-import dotenv from 'dotenv';
 import axios from 'axios';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-
-dotenv.config();
+import { RAFINHA_PROMPT } from './prompts/rafinha_garimpo';
 
 const app = express();
 app.use(express.json());
 
-// Inicializa o SDK do Gemini
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-const memoryStore = new Map<string, any[]>();
+// Inicialização das variáveis de ambiente
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+const EVOLUTION_API_URL = process.env.EVOLUTION_API_URL || '';
+const EVOLUTION_API_KEY = process.env.EVOLUTION_API_KEY || '';
 
-const SYSTEM_PROMPT = `Você é o Rafinha, agente virtual da Garimpo Network 🇧🇷.
-Seu objetivo é atender clientes interessados em implementar Agentes de IA em seus negócios locais (autônomos ou estabelecimentos físicos).
+// Configuração do Google Gemini 1.5 Flash com a System Instruction do Rafinha
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({
+  model: 'gemini-1.5-flash',
+  systemInstruction: RAFINHA_PROMPT,
+});
 
-Sua missão:
-1. Dar as boas-vindas e coletar o nome do cliente e o ramo de atividade.
-2. Identificar os principais gargalos do atendimento atual do cliente.
-3. Apresentar os benefícios dos Agentes de IA da Garimpo Network 🇧🇷.
-4. Guiar o cliente para agendar uma reunião de demonstração.
-
-Regras de formatação para WhatsApp:
-- Use apenas um asterisco para *negrito*.
-- Para separar mensagens enviadas em sequência, use duas barras invertidas: \\
-\\`;
-
-async function sendWhatsAppMessage(instance: string, remoteJid: string, text: string) {
-  try {
-    await axios.post(
-      `${process.env.EVOLUTION_API_URL}/message/sendText/${instance}`,
-      {
-        number: remoteJid,
-        options: { delay: 1200, presence: 'composing' },
-        textMessage: { text }
-      },
-      {
-        headers: {
-          'apikey': process.env.EVOLUTION_API_KEY || '',
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-  } catch (error) {
-    console.error('Erro ao enviar mensagem:', error);
-  }
-}
-
+// Rota do Webhook da Evolution API
 app.post('/webhook', async (req: Request, res: Response) => {
-  res.status(200).send({ status: 'SUCCESS' });
-
-  const body = req.body;
-  if (body?.event !== 'messages.upsert') return;
-
-  const data = body?.data;
-  if (data?.key?.fromMe || data?.messageType !== 'conversation' || !data?.message?.conversation) return;
-
-  const remoteJid = data.key.remoteJid;
-  const userText = data.message.conversation;
-  const clientName = data.pushName || 'Cliente';
-
-  if (!memoryStore.has(remoteJid)) {
-    memoryStore.set(remoteJid, []);
-  }
-
-  const history = memoryStore.get(remoteJid)!;
-  history.push({ role: 'user', parts: [{ text: `Cliente: ${clientName}\nMensagem: ${userText}` }] });
-
   try {
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
-      systemInstruction: SYSTEM_PROMPT
-    });
+    const data = req.body;
 
-    const chat = model.startChat({
-      history: history.slice(0, -1) // envia o histórico prévio
-    });
+    // Processa apenas mensagens enviadas por utilizadores (MESSAGES_UPSERT)
+    if (data.event === 'messages.upsert' && !data.data.key.fromMe) {
+      const remoteJid = data.data.key.remoteJid;
+      const instance = data.instance;
 
-    const result = await chat.sendMessage(`Cliente: ${clientName}\nMensagem: ${userText}`);
-    const aiResponseText = result.response.text();
+      // Extrai o texto da mensagem
+      const userMessage =
+        data.data.message?.conversation ||
+        data.data.message?.extendedTextMessage?.text ||
+        '';
 
-    history.push({ role: 'model', parts: [{ text: aiResponseText }] });
+      if (userMessage) {
+        console.log(`[Mensagem Recebida de ${remoteJid}]: ${userMessage}`);
 
-    if (history.length > 20) {
-      memoryStore.set(remoteJid, history.slice(-20));
+        // Envia o texto da mensagem para o Gemini gerar a resposta
+        const result = await model.generateContent(userMessage);
+        const responseText = result.response.text();
+
+        console.log(`[Resposta do Rafinha]: ${responseText}`);
+
+        // Envia a resposta de volta ao utilizador através da Evolution API
+        await axios.post(
+          `${EVOLUTION_API_URL}/message/sendText/${instance}`,
+          {
+            number: remoteJid,
+            options: {
+              delay: 1200,
+              presence: 'composing',
+            },
+            text: responseText,
+          },
+          {
+            headers: {
+              apikey: EVOLUTION_API_KEY,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+      }
     }
 
-    const messages = aiResponseText
-      .split(/\\\\/)
-      .map(m => m.trim())
-      .filter(m => m.length > 0);
-
-    for (const msg of messages) {
-      await sendWhatsAppMessage(body.instance, remoteJid, msg);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-    }
-  } catch (err) {
-    console.error('Erro no processamento do Gemini:', err);
+    return res.status(200).json({ status: 'SUCCESS' });
+  } catch (error) {
+    console.error('Erro ao processar o webhook:', error);
+    return res.status(500).json({ error: 'Erro interno no servidor' });
   }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
+// Porta padrão do Render
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
+});

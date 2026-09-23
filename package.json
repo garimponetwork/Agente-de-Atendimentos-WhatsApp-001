@@ -1,0 +1,23 @@
+{
+  "name": "agente-atendimentos-whatsapp-001",
+  "version": "1.0.0",
+  "description": "Agente de IA autônomo (Rafinha) para atendimento e triagem - Garimpo Network",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts"
+  },
+  "dependencies": {
+    "@google/genai": "^0.1.1",
+    "axios": "^1.6.8",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.11.24",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.3.3"
+  }
+}

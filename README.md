@@ -65,3 +65,6 @@ EVOLUTION_API_URL=[https://sua-instancia-evolution.com](https://sua-instancia-ev
 EVOLUTION_API_TOKEN=seu_token_evolution
 PORT=10000
 
+📄 Licença
+Este projeto está sob a licença MIT.
+Rafael Brinck | Garimpo Network 🇧🇷 

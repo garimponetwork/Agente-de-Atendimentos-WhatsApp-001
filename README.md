@@ -55,3 +55,13 @@ Estrutura para identificação e salvamento de e-mails de clientes na base de da
 
 ⚙️ Configuração de Variáveis de Ambiente (.env)
 Para o correto funcionamento do servidor em src/server.ts, configure as seguintes variáveis no ambiente:
+
+# Conexão com Banco de Dados
+DATABASE_URL=postgresql://usuario:senha@host:porta/database
+
+# Chaves de Fallback (Global)
+GEMINI_API_KEY=sua_chave_global_gemini
+EVOLUTION_API_URL=[https://sua-instancia-evolution.com](https://sua-instancia-evolution.com)
+EVOLUTION_API_TOKEN=seu_token_evolution
+PORT=10000
+

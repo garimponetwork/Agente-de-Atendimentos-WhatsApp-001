@@ -11,20 +11,20 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 const EVOLUTION_API_URL = process.env.EVOLUTION_API_URL || '';
 const EVOLUTION_API_KEY = process.env.EVOLUTION_API_KEY || '';
 
-// Configuração do Google Gemini 1.5 Flash com a System Instruction do Rafinha
+// Configuração do Google Gemini 2.5 Flash com o system instruction do Rafinha
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({
-  model: 'gemini-1.5-flash',
+  model: 'gemini-2.5-flash',
   systemInstruction: RAFINHA_PROMPT,
 });
 
-// Palavras-chave para filtrar spams de empréstimos, promotoras e telemarketing
+// Palavras-chave para filtrar spam de empréstimos, consignados e refinanciamento
 const SPAM_KEYWORDS = [
   'empréstimo',
   'emprestimo',
   'consignado',
   'promotora',
-  's3 promotora',
+  'kit promotora',
   'margem consignável',
   'margem consignavel',
   'refinanciamento',
@@ -61,12 +61,12 @@ app.post('/webhook', async (req: Request, res: Response) => {
       if (userMessage) {
         console.log(`[Mensagem Recebida de ${remoteJid}]: ${userMessage}`);
 
-        // 2. FILTRO ANTI-SPAM: Verifica se a mensagem contém ofertas de empréstimo ou robôs terceiros
+        // 2. FILTRO ANTI-SPAM: Verifica se a mensagem contém ofertas de empréstimo ou crédito terceirizado
         const lowerText = userMessage.toLowerCase();
         const isSpam = SPAM_KEYWORDS.some((keyword) => lowerText.includes(keyword));
 
         if (isSpam) {
-          console.log(`[Spam/Empréstimo Ignorado]: "${userMessage}" vindo de ${remoteJid}`);
+          console.log(`[Spam/Empréstimo Ignorado] "${userMessage}" vinda de ${remoteJid}`);
           return res.status(200).json({ status: 'IGNORED_SPAM' });
         }
 
@@ -76,7 +76,7 @@ app.post('/webhook', async (req: Request, res: Response) => {
 
         console.log(`[Resposta do Rafinha]: ${responseText}`);
 
-        // Envia a resposta de volta ao utilizador através da Evolution API
+        // Envia a resposta do Rafinha de volta ao utilizador através da Evolution API
         await axios.post(
           `${EVOLUTION_API_URL}/message/sendText/${instance}`,
           {

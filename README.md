@@ -48,3 +48,14 @@ EVOLUTION_API_URLURL base da sua instância da Evolution API no Railway
 EVOLUTION_API_TOKENChave Global / API Key de autenticação da Evolution API
 PORTPorta de execução do servidor Express (Padrão: 10000)
 
+📌 Webhook e Eventos Processados
+Rota do Webhook: POST /webhook
+Evento Monitorado: messages.upsert
+URL de Destino: https://agente-de-atendimentos-whatsapp-001.onrender.com/webhook
+
+📂 Manutenção do Banco de Dados
+Os scripts SQL de inicialização e atualização de tabelas estão localizados em:
+database/schema.sql
+
+📄 Licença
+Projeto desenvolvido e mantido por Garimpo Network | Rafael Brinck.

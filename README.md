@@ -27,3 +27,31 @@ O projeto está estruturado no formato **Monorepo** para manter a separação cl
 ├── README.md               # Visão geral do repositório
 ├── package.json
 └── tsconfig.json
+
+🚀 Tecnologias Utilizadas
+Motor de IA: Google Gemini API (@google/generative-ai - modelo gemini-2.5-flash)
+Backend / API: Node.js com TypeScript e Express
+Integração WhatsApp: Evolution API
+Banco de Dados: PostgreSQL (hospedado no Railway / Render)
+Hospedagem da API: Render (apps/api)
+Versionamento: GitHub
+
+🔥 Funcionalidades Principais
+Gestão Dinâmica de Agentes (Multi-Tenancy):
+Prompts de persona, chaves de Gemini API e status de ativação carregados diretamente do banco de dados PostgreSQL.
+Filtro Inteligente Anti-Spam e Grupos:
+Bloqueio automático em mensagens de grupos de WhatsApp (@g.us).
+Validação por palavras-chave (SPAM/PYRAMIDS) para barrar ofertas de invasão e spam.
+Injeção de Ofertas em Tempo Real:
+Consulta a tabela de produtos/ofertas no banco e injeta automaticamente no contexto das conversas.
+Simulação de Presença Humana:
+Envio de status "digitando..." (composing) e delay configurado de 1.2s para humanização da experiência.
+Acessibilidade Multimodal & Inclusão Social (Áudio, Visão e Linguagem Clara):
+Processamento de Áudio: Transcrição e interpretação nativa de mensagens de voz enviadas por usuários com baixa escolaridade ou limitações de escrita.
+Visão Computacional (OCR): Leitura de fotos de documentos, produtos ou comprovantes enviados pelos clientes.
+Linguagem Simplificada: Instruções de sistema focadas em respostas acolhedoras, objetivas e sem jargões difíceis.
+Captura de Leads para E-mail Marketing:
+Estrutura para identificação e salvamento de e-mails de clientes na base de dados.
+
+⚙️ Configuração de Variáveis de Ambiente (.env)
+Para o correto funcionamento do servidor em src/server.ts, configure as seguintes variáveis no ambiente:

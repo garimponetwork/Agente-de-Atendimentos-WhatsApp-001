@@ -41,3 +41,10 @@ O projeto está estruturado no formato **Monorepo** para manter a separação cl
 ​🛠️ Configuração de Variáveis de Ambiente (.env)
 ​Para o correto funcionamento do servidor em apps/api, configure as seguintes variáveis no serviço do Render:
 
+VariávelDescrição
+DATABASE_URLURI de conexão direta com o PostgreSQL no Railway/Render
+GEMINI_API_KEYChave global de fallback para a API do Google Gemini
+EVOLUTION_API_URLURL base da sua instância da Evolution API no Railway
+EVOLUTION_API_TOKENChave Global / API Key de autenticação da Evolution API
+PORTPorta de execução do servidor Express (Padrão: 10000)
+
